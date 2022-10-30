@@ -1,7 +1,6 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from typing import Union, Any
 
 
@@ -42,7 +41,24 @@ class BikeData:
     def subset(self, **subset_dicts) -> BikeData:
         """
         Produces a new instance of the BikeData Class, where all of the
-        entries obey the conditions passed in the subset list
+        entries obey the conditions passed.
+
+        Each kwarg takes a dictionary of the form kwarg={column: vale}.
+        The kwarg itself determines what operator is used.
+        column must be a string in self.features. The value is that which
+        The equality is applied to.
+
+        Examples:
+            BikeData(..).subset(eq={"hr":10})
+            This returns a new bikedata instance, where the data is only
+            that where hr == 10.
+
+        Keyword Args:
+             eq: ==
+             l: <
+             leq: <=
+             g: >
+             geq: >=
 
 
         Returns:
@@ -61,12 +77,20 @@ class BikeData:
         for comparison_op, dict in subset_dicts.items():
             assert comparison_op in _op.keys()
             for key, value in dict.items():
+                assert key in self.features
                 mask.append(_op[comparison_op](self.data[key], value))
         mask = np.bitwise_and.reduce(mask)
         subset = self.data.loc[mask]
         return BikeData(subset)
 
-
+    def union(self, bikedata):
+        """
+        Adds the data from two instances of BikeData.
+        This is designed for joining mutually exclusive subsets.
+        """
+        union_data = pd.concat((self.data, bikedata.data), ignore_index=True)
+        union_data.sort_values(by="hr")
+        return BikeData(union_data)
     def _find_type(self) -> str:
         hourly_features = [
             "instant",
