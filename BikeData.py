@@ -62,7 +62,7 @@ class BikeData:
             assert comparison_op in _op.keys()
             for key, value in dict.items():
                 mask.append(_op[comparison_op](self.data[key], value))
-        mask = np.bitwise_or.reduce(mask)
+        mask = np.bitwise_and.reduce(mask)
         subset = self.data.loc[mask]
         return BikeData(subset)
 
@@ -119,5 +119,11 @@ class BikeData:
 
 
 if __name__ == "__main__":
-    hr = BikeData("hour.csv")
-    day = BikeData("day.csv")
+    daily = BikeData("day.csv")
+    hourly = BikeData("hour.csv")
+    spring_summer = daily.subset(leq={"season": 2},
+                                 eq={"holiday": 0, "workingday": 1})
+    assert spring_summer.data["season"].all() < 2
+    assert spring_summer.data["workingday"].all() == 1
+    assert spring_summer.data["holiday"].all() == 0
+#%%
