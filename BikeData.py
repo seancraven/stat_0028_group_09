@@ -18,28 +18,13 @@ class BikeData:
             data: string path to csv, or a dataframe with the same
                 features.
         """
-        self.types = ["hourly", "daily", "join"]
+        self.types = ["hourly", "daily", ]
         self.data = self._data_df(data)
         self.type = self._find_type()
         # instant column are just index
         self._drop_instant()
         self.features = self.data.columns.to_list()
-    def hour_inner_join(self, bikedata: BikeData):
-        """
-        Joins an instance of bike data along the day column.
-        rgs:
-            bikedata: A table which is joined
 
-        Returns:
-            BikeData: Class instance of type join
-        """
-        assert self.type != bikedata.type != "join"
-        if self.type == "hourly":
-            inner = pd.merge(self.data[["hr", "dteday"]], bikedata.data, left_on="dteday", right_on="dteday")
-        else:
-            inner = pd.merge(self.data, bikedata.data[["hr", "dteday"]], left_on="dteday", right_on="dteday")
-
-        return BikeData(inner)
 
     def _drop_instant(self):
         try:
@@ -124,8 +109,6 @@ class BikeData:
             return "hourly"
         elif set(self.data.columns.to_list()).issuperset(daily_features):
             return "daily"
-        elif set(self.data.columns.to_list()).issuperset(set(hourly_features + daily_features)):
-            return "join"
         else:
             print("Not a valid Dataset, lacks the correct features.")
             print("Missing features:")
