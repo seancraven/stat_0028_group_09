@@ -1,0 +1,16 @@
+## Structure of My Solution
+Raw Data:
+the data has a 15 ish features of which we are only interested in the total count during peak hours.
+First step is to select only summer and spring:
+```class BikeData
+        def __init__():
+            """
+            load the data
+            either from csv
+            or already dataframe
+            """
+        def get_catagorical_subset(Feature and Catagories)
+
+        def get_peak(hours, weekdays, holidays):
+```
+The output of the separated data will have the same hours for each day. Because there are not that many hours in the day we can just plot the histograms for each hour for bike usage and move on from there.
