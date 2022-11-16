@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
-from typing import Union, Any
+from typing import Union, Any, Dict
 
 
 class BikeData:
@@ -17,13 +17,15 @@ class BikeData:
             data: string path to csv, or a dataframe with the same
                 features.
         """
-        self.types = ["hourly", "daily", ]
+        self.types = [
+            "hourly",
+            "daily",
+        ]
         self.data = self._data_df(data)
         self.type = self._find_type()
         # instant column are just index
         self._drop_instant()
         self.features = self.data.columns.to_list()
-
 
     def _drop_instant(self):
         try:
@@ -83,6 +85,32 @@ class BikeData:
         subset = self.data.loc[mask]
         return BikeData(subset)
 
+    def column_reduce(
+        self, reduction_key: str, reduction_column: str, reduction_operator=np.sum
+    ) -> Dict:
+        """
+        Performs a functional reduction of the reduction column, which have
+        the same values in the reduction key values in the bike data object.
+
+        Args:
+            reduction_column: Column of values which the values are reduced over.
+            reduction_key: Column of values which defines set of values
+                which the reduction is performed over. The sets are formed
+                of values which have the same key.
+            reduction_operator: Operator that maps set to single value
+
+        Returns:
+            reduction : dataframe of size (unique keys, 2)
+            Column[0] keys
+            Column[1] reduce(set of values with same keys)
+        """
+        unique_keys = np.unique(self.data[reduction_key])
+        reduction = {}
+        for key in unique_keys:
+            mask = self.data[reduction_key] == key
+            reduction[key] = reduction_operator((self.data[reduction_column])[mask])
+        return reduction
+
     def union(self, bikedata):
         """
         Adds the data from two instances of BikeData.
@@ -91,6 +119,7 @@ class BikeData:
         union_data = pd.concat((self.data, bikedata.data), ignore_index=True)
         union_data.sort_values(by="hr")
         return BikeData(union_data)
+
     def _find_type(self) -> str:
         hourly_features = [
             "instant",
@@ -145,9 +174,7 @@ class BikeData:
 if __name__ == "__main__":
     daily = BikeData("day.csv")
     hourly = BikeData("hour.csv")
-    spring_summer = daily.subset(leq={"season": 2},
-                                 eq={"holiday": 0, "workingday": 1})
+    spring_summer = daily.subset(leq={"season": 2}, eq={"holiday": 0, "workingday": 1})
     assert spring_summer.data["season"].all() < 2
     assert spring_summer.data["workingday"].all() == 1
     assert spring_summer.data["holiday"].all() == 0
-#%%
